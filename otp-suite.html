@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One-Time Pad Suite</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #202328;
+    --surface: #2b2e35;
+    --surface2: #33363f;
+    --border: #33363f;
+    --text: #ffffff;
+    --text-dim: #808080;
+    --accent: #1fbad0;
+    --accent-dim: rgba(31, 186, 208, 0.2);
+    --accent-hover: #23d4e5;
+    --green: #34d399;
+    --red: #f87171;
+    --orange: #fb923c;
+    --yellow: #fbbf24;
+    --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Avenir', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .page-header {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .page-header .title-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .page-header .title-area i {
+    font-size: 24px;
+    color: var(--accent);
+  }
+  .page-header .back-link {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+  }
+  .page-header .back-link:hover { color: var(--accent); }
+
+  .tabs {
+    display: flex;
+    max-width: 960px;
+    margin: 16px auto 0;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 10px 16px;
+    cursor: pointer;
+    color: var(--text-dim);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab i { font-size: 16px; }
+
+  .main-content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  input[type="text"], input[type="number"], input[type="password"], textarea, select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+  }
+
+  textarea {
+    font-family: var(--mono);
+    font-size: 13px;
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-row {
+    margin-bottom: 16px;
+  }
+
+  .form-row-inline {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-row-inline > div { flex: 1; }
+
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #1a1c20;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text-dim);
+  }
+  .btn-secondary:hover { background: #3d4049; color: var(--text); }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--red);
+  }
+  .btn-danger:hover { background: rgba(248,113,113,0.1); }
+
+  .btn-success {
+    background: var(--green);
+    color: #1a1c20;
+  }
+  .btn-success:hover { background: #5ee8b5; }
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .pad-display {
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.8;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    word-break: break-all;
+    letter-spacing: 0.15em;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .pad-display .used { color: var(--red); text-decoration: line-through; opacity: 0.5; }
+  .pad-display .available { color: var(--green); }
+
+  .pad-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .pad-list-item:hover { border-color: var(--accent); }
+  .pad-list-item.selected { border-color: var(--accent); background: rgba(31,186,208,0.05); }
+
+  .pad-list-item .pad-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .pad-list-item .pad-id {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .pad-list-item .pad-meta {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .status-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .status-unused { background: rgba(52,211,153,0.15); color: var(--green); }
+  .status-partial { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .status-exhausted { background: rgba(248,113,113,0.15); color: var(--red); }
+
+  .output-box {
+    font-family: var(--mono);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    word-break: break-all;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    background: var(--surface);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .copy-btn:hover { color: var(--text); }
+
+  .warning {
+    background: rgba(251,146,60,0.08);
+    border: 1px solid rgba(251,146,60,0.3);
+    border-radius: 6px;
+    padding: 12px 16px;
+    color: var(--orange);
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .info-box {
+    background: rgba(31,186,208,0.08);
+    border: 1px solid var(--accent-dim);
+    border-radius: 6px;
+    padding: 12px 16px;
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .info-box code {
+    background: var(--bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .strength-meter {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    margin-top: 6px;
+    overflow: hidden;
+  }
+
+  .strength-meter .fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s, background 0.3s;
+  }
+
+  .char-map-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .char-map-item {
+    background: var(--bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+    color: var(--text-dim);
+  }
+
+  .char-map-item span { color: var(--accent); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+  }
+
+  .empty-state p { margin-top: 8px; font-size: 13px; }
+
+  .hidden-input { display: none; }
+
+  .stego-preview {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .stego-preview-box {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+  }
+
+  .stego-preview-box img {
+    max-width: 100%;
+    max-height: 250px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .stego-preview-box label {
+    text-align: center;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  .stego-capacity {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+
+  .stego-success {
+    background: rgba(52,211,153,0.08);
+    border: 1px solid var(--green);
+    border-radius: 6px;
+    padding: 12px 16px;
+    color: var(--green);
+    font-size: 13px;
+    margin-top: 16px;
+  }
+
+  @media (max-width: 640px) {
+    .main-content { padding: 10px; }
+    .form-row-inline { flex-direction: column; gap: 10px; }
+
+    /* Page header */
+    .page-header {
+      padding: 10px 10px 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .page-header h1 { font-size: 18px; }
+    .page-header .title-area i { font-size: 20px; }
+
+    /* Scrollable tabs — single row, no wrapping */
+    .tabs {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 0 10px;
+      gap: 0;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      padding: 10px 10px;
+      font-size: 11px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tab i { font-size: 14px; }
+
+    /* Cards */
+    .card { padding: 16px; margin-bottom: 14px; }
+    .card h2 { font-size: 14px; margin-bottom: 12px; }
+    .card h3 { font-size: 13px; }
+
+    /* Inputs */
+    input[type="text"], input[type="number"], input[type="password"], textarea, select {
+      font-size: 16px; /* prevents iOS zoom on focus */
+      padding: 10px 12px;
+    }
+    textarea { min-height: 70px; }
+
+    /* Buttons */
+    button { padding: 10px 14px; font-size: 13px; width: 100%; justify-content: center; }
+    .btn-group { flex-direction: column; gap: 8px; }
+    .copy-btn { font-size: 11px; padding: 4px 8px; }
+
+    /* Pad display */
+    .pad-display {
+      font-size: 11px;
+      padding: 10px;
+      max-height: 200px;
+      letter-spacing: 0.1em;
+      line-height: 1.6;
+    }
+
+    /* Pad list items */
+    .pad-list-item { padding: 10px 12px; }
+    .pad-list-item .pad-id { font-size: 12px; }
+    .pad-list-item .pad-meta { font-size: 11px; }
+    .status-badge { font-size: 10px; padding: 2px 8px; }
+
+    /* Output box */
+    .output-box {
+      font-size: 12px;
+      padding: 12px;
+      padding-top: 32px;
+      letter-spacing: 0.08em;
+    }
+
+    /* Info and warning boxes */
+    .info-box, .warning { font-size: 12px; padding: 10px 12px; }
+
+    /* Char map */
+    .char-map-grid {
+      grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+      gap: 3px;
+      font-size: 11px;
+    }
+    .char-map-item { padding: 3px 4px; }
+
+    /* Stego preview */
+    .stego-preview { flex-direction: column; }
+    .stego-preview-box { min-width: unset; }
+    .stego-preview-box img { max-height: 180px; }
+    .stego-capacity { font-size: 11px; }
+    .stego-success { font-size: 12px; }
+
+    /* Form row spacing */
+    .form-row { margin-bottom: 12px; }
+    label { font-size: 12px; }
+
+    /* Strength meter label */
+    .strength-meter { margin-top: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="title-area">
+    <i class="ti ti-lock-code"></i>
+    <h1>One-Time Pad Suite</h1>
+  </div>
+  <div style="display:flex; gap:12px; align-items:center;">
+    
+    <span></span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-panel="generate"><i class="ti ti-dice-3"></i> Generate</div>
+  <div class="tab" data-panel="encrypt"><i class="ti ti-lock"></i> Encrypt</div>
+  <div class="tab" data-panel="decrypt"><i class="ti ti-lock-open"></i> Decrypt</div>
+  <div class="tab" data-panel="pads"><i class="ti ti-books"></i> Pad Library</div>
+  <div class="tab" data-panel="stego"><i class="ti ti-photo-shield"></i> Steganography</div>
+  <div class="tab" data-panel="export"><i class="ti ti-file-export"></i> Export / Import</div>
+  <div class="tab" data-panel="reference"><i class="ti ti-table"></i> Reference</div>
+</div>
+
+<div class="main-content">
+
+  <!-- GENERATE PANEL -->
+  <div class="panel active" id="panel-generate">
+    <div class="card">
+      <h2><i class="ti ti-dice-3"></i> Generate One-Time Pad</h2>
+      <div class="info-box">
+        Generates cryptographically secure random digits using <code>crypto.getRandomValues()</code>. Each pad gets a unique ID and is stored in your in-memory pad library.
+      </div>
+      <div class="form-row-inline">
+        <div>
+          <label for="pad-length">Pad length (digits)</label>
+          <input type="number" id="pad-length" value="1000" min="10" max="100000" step="10">
+        </div>
+        <div>
+          <label for="pad-label">Label (optional)</label>
+          <input type="text" id="pad-label" placeholder="e.g. Alice-Bob March">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>That covers approximately <strong id="char-estimate">500</strong> characters of message text</label>
+      </div>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="generatePad()"><i class="ti ti-sparkles"></i> Generate Pad</button>
+      </div>
+    </div>
+
+    <div id="gen-result" style="display:none;">
+      <div class="card">
+        <h2>Generated Pad</h2>
+        <div id="gen-pad-display" class="pad-display"></div>
+        <div class="btn-group">
+          <button class="btn-secondary" onclick="copyPadToClipboard()"><i class="ti ti-clipboard"></i> Copy to Clipboard</button>
+          <button class="btn-primary" onclick="switchToTab('pads')"><i class="ti ti-books"></i> View in Library</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENCRYPT PANEL -->
+  <div class="panel" id="panel-encrypt">
+    <div class="card">
+      <h2><i class="ti ti-lock"></i> Encrypt Message</h2>
+      <div class="form-row">
+        <label>Select Pad</label>
+        <div id="encrypt-pad-list"></div>
+      </div>
+      <div class="form-row">
+        <label for="encrypt-input">Plaintext Message</label>
+        <textarea id="encrypt-input" placeholder="Type your message here..."></textarea>
+      </div>
+      <div id="encrypt-cleaned" style="display:none;">
+        <div class="info-box" style="background:rgba(251,191,36,0.08); border-color:rgba(251,191,36,0.3);">
+          <div style="margin-bottom:6px; color:var(--yellow); font-weight:600; font-size:12px;">Unsupported characters replaced with spaces:</div>
+          <div id="encrypt-cleaned-text" style="font-family:var(--mono); font-size:13px; color:var(--text); word-break:break-all; line-height:1.6;"></div>
+          <div id="encrypt-stripped-chars" style="margin-top:6px; font-size:12px; color:var(--text-dim);"></div>
+        </div>
+      </div>
+      <div id="encrypt-length-info" class="info-box" style="display:none;"></div>
+      <div id="encrypt-warning" class="warning" style="display:none;"></div>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="encryptMessage()"><i class="ti ti-lock"></i> Encrypt</button>
+        <button class="btn-secondary" onclick="clearEncrypt()"><i class="ti ti-eraser"></i> Clear</button>
+      </div>
+    </div>
+    <div id="encrypt-result" style="display:none;">
+      <div class="card">
+        <h3>Ciphertext</h3>
+        <div class="output-box" id="encrypt-output">
+          <button class="copy-btn" onclick="copyText('encrypt-output')">Copy</button>
+        </div>
+        <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+          <h3 style="margin-bottom:12px;"><i class="ti ti-photo-down" style="color:var(--accent);"></i> Hide ciphertext in image</h3>
+          <div class="form-row">
+            <label for="msg-stego-image">Cover image (PNG or JPEG)</label>
+            <input type="file" id="msg-stego-image" accept="image/png,image/jpeg,image/jpg" style="font-size:13px;">
+          </div>
+          <div id="msg-stego-capacity" class="stego-capacity" style="display:none;"></div>
+          <div id="msg-stego-warning" class="warning" style="display:none;"></div>
+          <div class="btn-group">
+            <button class="btn-primary" onclick="msgStegoEmbed()"><i class="ti ti-photo-down"></i> Hide in Image</button>
+          </div>
+          <div id="msg-stego-result" style="display:none;">
+            <div class="stego-success" id="msg-stego-success"></div>
+            <div class="stego-preview">
+              <div class="stego-preview-box">
+                <label>Original</label>
+                <img id="msg-stego-original" src="">
+              </div>
+              <div class="stego-preview-box">
+                <label>With hidden message</label>
+                <img id="msg-stego-output" src="">
+              </div>
+            </div>
+            <div class="btn-group">
+              <button class="btn-success" onclick="msgStegoDownload()"><i class="ti ti-download"></i> Download Image</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECRYPT PANEL -->
+  <div class="panel" id="panel-decrypt">
+    <div class="card">
+      <h2><i class="ti ti-lock-open"></i> Decrypt Message</h2>
+      <div class="form-row">
+        <label>Select Pad</label>
+        <div id="decrypt-pad-list"></div>
+      </div>
+      <div class="form-row">
+        <label for="decrypt-input">Ciphertext (digits) — paste manually or extract from image below</label>
+        <textarea id="decrypt-input" placeholder="Paste ciphertext digits here..."></textarea>
+      </div>
+      <div class="form-row">
+        <label for="decrypt-offset">Pad offset (start position)</label>
+        <input type="number" id="decrypt-offset" value="0" min="0">
+        <label style="margin-top:4px; font-size:12px;">Use this if the message was encrypted starting from a specific position in the pad.</label>
+      </div>
+      <div style="margin-bottom:16px; padding:16px; background:var(--bg); border:1px solid var(--border); border-radius:6px;">
+        <label style="font-weight:600; color:var(--text); margin-bottom:8px;"><i class="ti ti-photo-search" style="color:var(--accent);"></i> Or extract ciphertext from image</label>
+        <div class="form-row" style="margin-top:8px;">
+          <input type="file" id="msg-stego-extract-image" style="font-size:13px;">
+        </div>
+        <div class="btn-group" style="margin-top:8px;">
+          <button class="btn-secondary" onclick="msgStegoExtract()"><i class="ti ti-photo-search"></i> Extract from Image</button>
+        </div>
+        <div id="msg-stego-extract-status" style="margin-top:8px; font-size:13px;"></div>
+      </div>
+      <div id="decrypt-warning" class="warning" style="display:none;"></div>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="decryptMessage()"><i class="ti ti-lock-open"></i> Decrypt</button>
+        <button class="btn-secondary" onclick="clearDecrypt()"><i class="ti ti-eraser"></i> Clear</button>
+      </div>
+    </div>
+    <div id="decrypt-result" style="display:none;">
+      <div class="card">
+        <h3>Decrypted Plaintext</h3>
+        <div class="output-box" id="decrypt-output">
+          <button class="copy-btn" onclick="copyText('decrypt-output')">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAD LIBRARY PANEL -->
+  <div class="panel" id="panel-pads">
+    <div class="card">
+      <h2><i class="ti ti-books"></i> Pad Library</h2>
+      <div class="info-box">
+        Pads are stored in memory only. Export them before closing the browser to avoid losing them.
+      </div>
+      <div id="pad-library-list"></div>
+      <div id="pad-library-empty" class="empty-state">
+        <p><strong>No pads yet</strong></p>
+        <p>Generate a pad from the Generate tab to get started.</p>
+      </div>
+    </div>
+    <div id="pad-detail" style="display:none;">
+      <div class="card">
+        <h3 id="pad-detail-title"></h3>
+        <div class="form-row">
+          <label>Status: <span id="pad-detail-status"></span></label>
+          <label>Total digits: <span id="pad-detail-total"></span> &mdash; Used: <span id="pad-detail-used"></span> &mdash; Remaining: <span id="pad-detail-remaining"></span></label>
+        </div>
+        <div id="pad-detail-display" class="pad-display"></div>
+        <div class="btn-group">
+          <button class="btn-danger" onclick="destroySelectedPad()"><i class="ti ti-trash"></i> Destroy Pad</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEGANOGRAPHY PANEL -->
+  <div class="panel" id="panel-stego">
+    <div class="card">
+      <h2><i class="ti ti-photo-shield"></i> Hide Pad in Image</h2>
+      <div class="info-box">
+        Embeds one or more pads into a cover image using LSB (Least Significant Bit) steganography. The pad data is first encrypted with AES-256-GCM, then hidden in the pixel values. The output image looks identical to the original.<br><br>
+        <strong>Important:</strong> Save and share the output as PNG only. JPEG or other lossy formats will destroy the hidden data.
+      </div>
+      <div class="form-row">
+        <label for="stego-embed-image">Cover image (PNG or JPEG)</label>
+        <input type="file" id="stego-embed-image" accept="image/png,image/jpeg,image/jpg" style="font-size:13px;">
+      </div>
+      <div id="stego-capacity-info" class="stego-capacity" style="display:none;"></div>
+      <div class="form-row">
+        <label>Select pads to embed</label>
+        <div id="stego-pad-list"></div>
+      </div>
+      <div class="form-row">
+        <label for="stego-embed-pass">Encryption passphrase</label>
+        <input type="password" id="stego-embed-pass" placeholder="Enter a strong passphrase">
+        <div class="strength-meter"><div class="fill" id="stego-embed-strength"></div></div>
+        <label id="stego-embed-strength-label" style="margin-top:4px; font-size:12px;"></label>
+      </div>
+      <div class="form-row">
+        <label for="stego-embed-pass-confirm">Confirm passphrase</label>
+        <input type="password" id="stego-embed-pass-confirm" placeholder="Re-enter passphrase">
+      </div>
+      <div id="stego-embed-warning" class="warning" style="display:none;"></div>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="stegoEmbed()"><i class="ti ti-photo-down"></i> Hide Pads in Image</button>
+      </div>
+      <div id="stego-embed-result" style="display:none;">
+        <div class="stego-success" id="stego-embed-success"></div>
+        <div class="stego-preview">
+          <div class="stego-preview-box">
+            <label>Original</label>
+            <img id="stego-original-preview" src="">
+          </div>
+          <div class="stego-preview-box">
+            <label>With hidden pad (download this)</label>
+            <img id="stego-output-preview" src="">
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-success" onclick="stegoDownload()"><i class="ti ti-download"></i> Download Stego Image (PNG)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="ti ti-photo-up"></i> Extract Pad from Image</h2>
+      <div class="info-box">
+        Load a stego image and enter the passphrase to recover the hidden pads. The extracted pads are loaded directly into your pad library.
+      </div>
+      <div class="form-row">
+        <label for="stego-extract-image">Stego image (any extension — the file is loaded as PNG internally)</label>
+        <input type="file" id="stego-extract-image" style="font-size:13px;">
+      </div>
+      <div class="form-row">
+        <label for="stego-extract-pass">Passphrase</label>
+        <input type="password" id="stego-extract-pass" placeholder="Enter the passphrase">
+      </div>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="stegoExtract()"><i class="ti ti-photo-search"></i> Extract Pads</button>
+      </div>
+      <div id="stego-extract-status" style="margin-top:12px; font-size:13px;"></div>
+    </div>
+  </div>
+
+  <!-- EXPORT / IMPORT PANEL -->
+  <div class="panel" id="panel-export">
+    <div class="card">
+      <h2><i class="ti ti-file-export"></i> Export Pads (Encrypted)</h2>
+      <div class="info-box">
+        Exports all pads as a single AES-256-GCM encrypted file. Share the file through a secure channel and communicate the passphrase separately (ideally in person).
+      </div>
+      <div class="form-row">
+        <label for="export-pass">Passphrase</label>
+        <input type="password" id="export-pass" placeholder="Enter a strong passphrase">
+        <div class="strength-meter"><div class="fill" id="export-strength"></div></div>
+        <label id="export-strength-label" style="margin-top:4px; font-size:12px;"></label>
+      </div>
+      <div class="form-row">
+        <label for="export-pass-confirm">Confirm Passphrase</label>
+        <input type="password" id="export-pass-confirm" placeholder="Re-enter passphrase">
+      </div>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="exportPads()"><i class="ti ti-download"></i> Export Encrypted File</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="ti ti-file-import"></i> Import Pads (Encrypted)</h2>
+      <div class="form-row">
+        <label for="import-file">Select encrypted pad file</label>
+        <input type="file" id="import-file" style="font-size:13px;">
+      </div>
+      <div class="form-row">
+        <label for="import-pass">Passphrase</label>
+        <input type="password" id="import-pass" placeholder="Enter the passphrase">
+      </div>
+      <div class="btn-group">
+        <button class="btn-success" onclick="importPads()"><i class="ti ti-upload"></i> Import &amp; Decrypt</button>
+      </div>
+      <div id="import-status" style="margin-top:12px; font-size:13px;"></div>
+    </div>
+
+    <div id="save-back-section" class="card" style="display:none;">
+      <h2><i class="ti ti-device-floppy"></i> Save Updated Pads</h2>
+      <div class="info-box">
+        Re-exports all pads using the same passphrase and filename from your last import. Use this after encrypting messages to save the updated pad state (with used digits marked), then replace the original file.
+      </div>
+      <div style="font-size:13px; color:var(--text-dim); margin-bottom:12px;">
+        Filename: <span id="save-back-filename" style="color:var(--accent); font-family:var(--mono);"></span>
+      </div>
+      <div class="btn-group">
+        <button id="save-back-btn" class="btn-primary" onclick="saveBackPads()"><i class="ti ti-device-floppy"></i> Save Updated Pads</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENCE PANEL -->
+  <div class="panel" id="panel-reference">
+    <div class="card">
+      <h2><i class="ti ti-table"></i> Character Encoding Table</h2>
+      <div class="info-box">
+        Each character is mapped to a 2-digit code. During encryption, each digit of the code is added (mod 10) to a digit from the pad. Decryption reverses this with subtraction (mod 10).
+      </div>
+      <div id="char-map-display" class="char-map-grid"></div>
+    </div>
+    <div class="card">
+      <h2><i class="ti ti-info-circle"></i> How It Works</h2>
+      <div style="color: var(--text-dim); font-size:13px; line-height:1.7;">
+        <p><strong style="color:var(--text);">Encryption:</strong> For each character in the message, look up its 2-digit code. Then add each digit to the next unused pad digit, modulo 10. The result is the ciphertext.</p>
+        <p style="margin-top:12px;"><strong style="color:var(--text);">Decryption:</strong> For each pair of ciphertext digits, subtract the corresponding pad digit (mod 10) to recover the original 2-digit code, then look up the character.</p>
+        <p style="margin-top:12px;"><strong style="color:var(--text);">Example:</strong> Letter "H" = code 07. Pad digits are 5 and 3. Ciphertext: (0+5)%10=5, (7+3)%10=0 &rarr; "50".</p>
+        <p style="margin-top:12px;"><strong style="color:var(--text);">Security rules:</strong> Never reuse any portion of a pad. The pad must be at least as long as the message (in digit-pairs). Destroy pads after use. Share pads only through a secure, separate channel.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== CHARACTER MAP ====================
+const CHAR_MAP = {};
+const CHAR_REVERSE = {};
+const CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789.,?!:;\'"-()@#&+=/\\';
+
+(function buildCharMap() {
+  for (let i = 0; i < CHARSET.length; i++) {
+    const code = String(i).padStart(2, '0');
+    CHAR_MAP[CHARSET[i]] = code;
+    CHAR_REVERSE[code] = CHARSET[i];
+  }
+})();
+
+// ==================== PAD STORAGE ====================
+let pads = [];
+let selectedPadId = null;
+let lastGeneratedId = null;
+
+// Remember import context for save-back
+let lastImportPass = null;
+let lastImportFilename = null;
+
+function genId() {
+  const arr = new Uint8Array(4);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+// ==================== PAD GENERATION ====================
+function generateSecureDigits(count) {
+  const digits = [];
+  const batch = 4096;
+  while (digits.length < count) {
+    const need = Math.min(batch, count - digits.length);
+    const arr = new Uint8Array(need);
+    crypto.getRandomValues(arr);
+    for (let i = 0; i < need; i++) {
+      if (arr[i] < 250) {
+        digits.push(arr[i] % 10);
+      } else {
+        const extra = new Uint8Array(1);
+        crypto.getRandomValues(extra);
+        if (extra[0] < 250) digits.push(extra[0] % 10);
+      }
+    }
+  }
+  return digits.slice(0, count);
+}
+
+function generatePad() {
+  const len = parseInt(document.getElementById('pad-length').value) || 200;
+  if (len < 10 || len > 100000) { alert('Pad length must be between 10 and 100,000 digits.'); return; }
+
+  const label = document.getElementById('pad-label').value.trim();
+  const digits = generateSecureDigits(len);
+  const pad = {
+    id: genId(),
+    label: label || null,
+    digits: digits,
+    usedCount: 0,
+    created: new Date().toISOString()
+  };
+
+  pads.push(pad);
+  lastGeneratedId = pad.id;
+
+  const display = document.getElementById('gen-pad-display');
+  display.innerHTML = formatPadDigits(digits, 0);
+  document.getElementById('gen-result').style.display = 'block';
+
+  refreshAllPadLists();
+}
+
+function formatPadDigits(digits, usedCount) {
+  let html = '';
+  for (let i = 0; i < digits.length; i++) {
+    if (i > 0 && i % 5 === 0) html += ' ';
+    if (i > 0 && i % 50 === 0) html += '<br>';
+    const cls = i < usedCount ? 'used' : 'available';
+    html += `<span class="${cls}">${digits[i]}</span>`;
+  }
+  return html;
+}
+
+function copyPadToClipboard() {
+  if (!lastGeneratedId) return;
+  const pad = pads.find(p => p.id === lastGeneratedId);
+  if (!pad) return;
+  const text = pad.digits.join('').replace(/(.{5})/g, '$1 ').replace(/(.{60})/g, '$1\n').trim();
+  navigator.clipboard.writeText(text).then(() => alert('Pad copied to clipboard.'));
+}
+
+// ==================== ENCRYPT ====================
+// Strip unsupported characters and return { cleaned, removed[] }
+function cleanText(raw) {
+  const upper = raw.toUpperCase();
+  let cleaned = '';
+  const replaced = new Set();
+  for (const ch of upper) {
+    if (ch in CHAR_MAP) {
+      cleaned += ch;
+    } else {
+      replaced.add(ch);
+      cleaned += ' ';
+    }
+  }
+  return { cleaned, replaced: [...replaced] };
+}
+
+function encryptMessage() {
+  const padId = getSelectedPadForPanel('encrypt');
+  if (!padId) { alert('Please select a pad.'); return; }
+
+  const pad = pads.find(p => p.id === padId);
+  if (!pad) { alert('Pad not found.'); return; }
+
+  const rawText = document.getElementById('encrypt-input').value;
+  if (!rawText.trim()) { alert('Enter a message to encrypt.'); return; }
+
+  const { cleaned: plaintext, replaced } = cleanText(rawText);
+  if (!plaintext.trim()) { alert('No supported characters in message. See the Reference tab.'); return; }
+
+  const digitsNeeded = plaintext.length * 2;
+  const available = pad.digits.length - pad.usedCount;
+
+  if (digitsNeeded > available) {
+    alert(`Not enough pad digits. Need ${digitsNeeded}, but only ${available} remain. Generate a larger pad or use a shorter message.`);
+    return;
+  }
+
+  let cipherDigits = [];
+  const startOffset = pad.usedCount;
+
+  for (let i = 0; i < plaintext.length; i++) {
+    const code = CHAR_MAP[plaintext[i]];
+    const d0 = parseInt(code[0]);
+    const d1 = parseInt(code[1]);
+    const p0 = pad.digits[pad.usedCount];
+    const p1 = pad.digits[pad.usedCount + 1];
+    cipherDigits.push((d0 + p0) % 10);
+    cipherDigits.push((d1 + p1) % 10);
+    pad.usedCount += 2;
+  }
+
+  const ciphertext = cipherDigits.join('');
+
+  // Store for message stego
+  lastCiphertext = ciphertext;
+  lastCipherMeta = `${pad.id}-${startOffset}`;
+
+  const outputEl = document.getElementById('encrypt-output');
+  outputEl.innerHTML = `<button class="copy-btn" onclick="copyText('encrypt-output')">Copy</button>` +
+    ciphertext.replace(/(.{5})/g, '$1 ').replace(/(.{60})/g, '$1\n').trim() +
+    `<br><br><span style="color:var(--text-dim);font-size:12px;">${lastCipherMeta}</span>`;
+
+  document.getElementById('encrypt-result').style.display = 'block';
+  // Reset stego section for new encryption
+  document.getElementById('msg-stego-result').style.display = 'none';
+  refreshAllPadLists();
+}
+
+function clearEncrypt() {
+  document.getElementById('encrypt-input').value = '';
+  document.getElementById('encrypt-result').style.display = 'none';
+  document.getElementById('encrypt-cleaned').style.display = 'none';
+  document.getElementById('encrypt-length-info').style.display = 'none';
+  document.getElementById('encrypt-warning').style.display = 'none';
+}
+
+// ==================== DECRYPT ====================
+function decryptMessage() {
+  const padId = getSelectedPadForPanel('decrypt');
+  if (!padId) { alert('Please select a pad.'); return; }
+
+  const pad = pads.find(p => p.id === padId);
+  if (!pad) { alert('Pad not found.'); return; }
+
+  const ciphertext = document.getElementById('decrypt-input').value.replace(/\s/g, '');
+  if (!ciphertext || !/^\d+$/.test(ciphertext)) {
+    alert('Ciphertext must contain only digits.');
+    return;
+  }
+
+  if (ciphertext.length % 2 !== 0) {
+    alert('Ciphertext must have an even number of digits (2 digits per character).');
+    return;
+  }
+
+  const offset = parseInt(document.getElementById('decrypt-offset').value) || 0;
+
+  if (offset + ciphertext.length > pad.digits.length) {
+    alert(`Not enough pad digits from offset ${offset}. Need ${ciphertext.length} digits but only ${pad.digits.length - offset} available from that position.`);
+    return;
+  }
+
+  let plaintext = '';
+  for (let i = 0; i < ciphertext.length; i += 2) {
+    const c0 = parseInt(ciphertext[i]);
+    const c1 = parseInt(ciphertext[i + 1]);
+    const p0 = pad.digits[offset + i];
+    const p1 = pad.digits[offset + i + 1];
+    const d0 = (c0 - p0 + 10) % 10;
+    const d1 = (c1 - p1 + 10) % 10;
+    const code = String(d0) + String(d1);
+
+    if (code in CHAR_REVERSE) {
+      plaintext += CHAR_REVERSE[code];
+    } else {
+      plaintext += `[?${code}]`;
+    }
+  }
+
+  const outputEl = document.getElementById('decrypt-output');
+  outputEl.innerHTML = `<button class="copy-btn" onclick="copyText('decrypt-output')">Copy</button>` + escapeHtml(plaintext);
+  document.getElementById('decrypt-result').style.display = 'block';
+}
+
+function clearDecrypt() {
+  document.getElementById('decrypt-input').value = '';
+  document.getElementById('decrypt-result').style.display = 'none';
+}
+
+// ==================== PAD LIBRARY ====================
+function refreshAllPadLists() {
+  renderPadLibrary();
+  renderPadSelector('encrypt-pad-list', 'encrypt');
+  renderPadSelector('decrypt-pad-list', 'decrypt');
+  if (typeof renderStegoPadSelector === 'function') renderStegoPadSelector();
+}
+
+function renderPadLibrary() {
+  const container = document.getElementById('pad-library-list');
+  const empty = document.getElementById('pad-library-empty');
+
+  if (pads.length === 0) {
+    container.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('pad-detail').style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  container.innerHTML = pads.map(p => {
+    const status = getStatus(p);
+    const statusClass = status === 'Unused' ? 'status-unused' : status === 'Partial' ? 'status-partial' : 'status-exhausted';
+    const label = p.label ? ` &mdash; ${escapeHtml(p.label)}` : '';
+    return `<div class="pad-list-item ${selectedPadId === p.id ? 'selected' : ''}" onclick="selectPadDetail('${p.id}')">
+      <div class="pad-info">
+        <span class="pad-id">${p.id}${label}</span>
+        <span class="pad-meta">${p.digits.length} digits &middot; ${p.digits.length - p.usedCount} remaining &middot; ${new Date(p.created).toLocaleDateString()}</span>
+      </div>
+      <span class="status-badge ${statusClass}">${status}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectPadDetail(id) {
+  selectedPadId = id;
+  const pad = pads.find(p => p.id === id);
+  if (!pad) return;
+
+  const status = getStatus(pad);
+  document.getElementById('pad-detail-title').textContent = pad.id + (pad.label ? ` — ${pad.label}` : '');
+  document.getElementById('pad-detail-status').innerHTML = `<span class="status-badge status-${status.toLowerCase()}">${status}</span>`;
+  document.getElementById('pad-detail-total').textContent = pad.digits.length;
+  document.getElementById('pad-detail-used').textContent = pad.usedCount;
+  document.getElementById('pad-detail-remaining').textContent = pad.digits.length - pad.usedCount;
+  document.getElementById('pad-detail-display').innerHTML = formatPadDigits(pad.digits, pad.usedCount);
+  document.getElementById('pad-detail').style.display = 'block';
+
+  refreshAllPadLists();
+}
+
+function destroySelectedPad() {
+  if (!selectedPadId) return;
+  const pad = pads.find(p => p.id === selectedPadId);
+  if (!pad) return;
+
+  if (!confirm(`Destroy pad ${pad.id}? This cannot be undone.`)) return;
+
+  pad.digits.fill(0);
+  pads = pads.filter(p => p.id !== selectedPadId);
+  selectedPadId = null;
+  document.getElementById('pad-detail').style.display = 'none';
+  refreshAllPadLists();
+}
+
+function getStatus(pad) {
+  if (pad.usedCount === 0) return 'Unused';
+  if (pad.usedCount >= pad.digits.length) return 'Exhausted';
+  return 'Partial';
+}
+
+// ==================== PAD SELECTORS ====================
+function renderPadSelector(containerId, panel) {
+  const container = document.getElementById(containerId);
+  const availablePads = pads.filter(p => p.usedCount < p.digits.length);
+
+  if (availablePads.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:8px;">No pads available. Generate one first.</div>';
+    return;
+  }
+
+  container.innerHTML = availablePads.map(p => {
+    const remaining = p.digits.length - p.usedCount;
+    const label = p.label ? ` — ${escapeHtml(p.label)}` : '';
+    const sel = container.dataset.selected === p.id ? 'selected' : '';
+    return `<div class="pad-list-item ${sel}" onclick="selectPadForPanel('${containerId}','${p.id}')">
+      <div class="pad-info">
+        <span class="pad-id">${p.id}${label}</span>
+        <span class="pad-meta">${remaining} digits remaining (~${Math.floor(remaining/2)} chars)</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectPadForPanel(containerId, padId) {
+  const container = document.getElementById(containerId);
+  container.dataset.selected = padId;
+  const panel = containerId.startsWith('encrypt') ? 'encrypt' : 'decrypt';
+  renderPadSelector(containerId, panel);
+}
+
+function getSelectedPadForPanel(panel) {
+  const container = document.getElementById(`${panel}-pad-list`);
+  return container.dataset.selected || null;
+}
+
+// ==================== EXPORT / IMPORT ====================
+async function deriveKey(passphrase, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: salt, iterations: 600000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function exportPads() {
+  if (pads.length === 0) { alert('No pads to export.'); return; }
+
+  const pass = document.getElementById('export-pass').value;
+  const passConfirm = document.getElementById('export-pass-confirm').value;
+
+  if (!pass) { alert('Enter a passphrase.'); return; }
+  if (pass !== passConfirm) { alert('Passphrases do not match.'); return; }
+  if (pass.length < 8) { alert('Passphrase must be at least 8 characters.'); return; }
+
+  try {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(pass, salt);
+
+    const data = JSON.stringify(pads.map(p => ({
+      id: p.id, label: p.label, digits: Array.from(p.digits),
+      usedCount: p.usedCount, created: p.created
+    })));
+
+    const enc = new TextEncoder();
+    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, enc.encode(data));
+
+    const fileData = new Uint8Array(16 + 12 + encrypted.byteLength);
+    fileData.set(salt, 0);
+    fileData.set(iv, 16);
+    fileData.set(new Uint8Array(encrypted), 28);
+
+    const blob = new Blob([fileData], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    // Random filename + innocuous extension to avoid revealing OTP usage
+    const rnd = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2,'0')).join('');
+    const exts = ['.bak', '.dat', '.tmp', '.bin', '.raw', '.dmp', '.log', '.cache'];
+    const ext = exts[Math.floor(Math.random() * exts.length)];
+    a.download = rnd + ext;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    alert('Pads exported successfully.');
+  } catch (e) {
+    alert('Export failed: ' + e.message);
+  }
+}
+
+async function importPads() {
+  const fileInput = document.getElementById('import-file');
+  const pass = document.getElementById('import-pass').value;
+  const statusEl = document.getElementById('import-status');
+
+  if (!fileInput.files.length) { alert('Select a file.'); return; }
+  if (!pass) { alert('Enter the passphrase.'); return; }
+
+  try {
+    statusEl.innerHTML = '<span style="color:var(--yellow);">Decrypting...</span>';
+    const fileData = new Uint8Array(await fileInput.files[0].arrayBuffer());
+
+    const salt = fileData.slice(0, 16);
+    const iv = fileData.slice(16, 28);
+    const ciphertext = fileData.slice(28);
+
+    const key = await deriveKey(pass, salt);
+    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, ciphertext);
+
+    const dec = new TextDecoder();
+    const imported = JSON.parse(dec.decode(decrypted));
+
+    let added = 0;
+    for (const p of imported) {
+      if (pads.find(existing => existing.id === p.id)) continue;
+      pads.push({
+        id: p.id, label: p.label, digits: p.digits,
+        usedCount: p.usedCount, created: p.created
+      });
+      added++;
+    }
+
+    // Remember passphrase and filename for save-back
+    lastImportPass = pass;
+    lastImportFilename = fileInput.files[0].name;
+
+    refreshAllPadLists();
+    updateSaveBackButton();
+    statusEl.innerHTML = `<span style="color:var(--green);">Imported ${added} pad(s) successfully. ${imported.length - added} duplicate(s) skipped.</span>`;
+  } catch (e) {
+    statusEl.innerHTML = `<span style="color:var(--red);">Import failed: wrong passphrase or corrupted file.</span>`;
+  }
+}
+
+// ==================== SAVE BACK (re-export with same password + filename) ====================
+function updateSaveBackButton() {
+  const container = document.getElementById('save-back-section');
+  if (lastImportPass && lastImportFilename) {
+    container.style.display = 'block';
+    document.getElementById('save-back-filename').textContent = lastImportFilename;
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+async function saveBackPads() {
+  if (!lastImportPass || !lastImportFilename) return;
+
+  try {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(lastImportPass, salt);
+
+    const data = JSON.stringify(pads.map(p => ({
+      id: p.id, label: p.label, digits: Array.from(p.digits),
+      usedCount: p.usedCount, created: p.created
+    })));
+
+    const enc = new TextEncoder();
+    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, enc.encode(data));
+
+    const fileData = new Uint8Array(16 + 12 + encrypted.byteLength);
+    fileData.set(salt, 0);
+    fileData.set(iv, 16);
+    fileData.set(new Uint8Array(encrypted), 28);
+
+    const blob = new Blob([fileData], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = lastImportFilename;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    // Flash confirmation
+    const btn = document.getElementById('save-back-btn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-check"></i> Saved';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-success');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('btn-success'); btn.classList.add('btn-primary'); }, 2000);
+  } catch (e) {
+    alert('Save failed: ' + e.message);
+  }
+}
+
+// ==================== PASSPHRASE STRENGTH ====================
+document.getElementById('export-pass').addEventListener('input', function() {
+  const pass = this.value;
+  let score = 0;
+  if (pass.length >= 8) score++;
+  if (pass.length >= 12) score++;
+  if (pass.length >= 16) score++;
+  if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score++;
+  if (/\d/.test(pass)) score++;
+  if (/[^a-zA-Z\d]/.test(pass)) score++;
+
+  const pct = Math.min(score / 6 * 100, 100);
+  const fill = document.getElementById('export-strength');
+  const label = document.getElementById('export-strength-label');
+
+  fill.style.width = pct + '%';
+  if (score <= 2) { fill.style.background = 'var(--red)'; label.textContent = 'Weak'; label.style.color = 'var(--red)'; }
+  else if (score <= 4) { fill.style.background = 'var(--yellow)'; label.textContent = 'Moderate'; label.style.color = 'var(--yellow)'; }
+  else { fill.style.background = 'var(--green)'; label.textContent = 'Strong'; label.style.color = 'var(--green)'; }
+});
+
+// ==================== ESTIMATE ====================
+document.getElementById('pad-length').addEventListener('input', function() {
+  const len = parseInt(this.value) || 0;
+  document.getElementById('char-estimate').textContent = Math.floor(len / 2);
+});
+
+// ==================== CHARACTER MAP DISPLAY ====================
+(function renderCharMap() {
+  const container = document.getElementById('char-map-display');
+  container.innerHTML = Object.entries(CHAR_MAP).map(([ch, code]) => {
+    const display = ch === ' ' ? 'SPC' : escapeHtml(ch);
+    return `<div class="char-map-item"><span>${code}</span> ${display}</div>`;
+  }).join('');
+})();
+
+// ==================== ENCRYPT INPUT MONITORING ====================
+document.getElementById('encrypt-input').addEventListener('input', function() {
+  const padId = getSelectedPadForPanel('encrypt');
+  const infoEl = document.getElementById('encrypt-length-info');
+  const warnEl = document.getElementById('encrypt-warning');
+  const cleanedEl = document.getElementById('encrypt-cleaned');
+
+  warnEl.style.display = 'none';
+  infoEl.style.display = 'none';
+  cleanedEl.style.display = 'none';
+
+  if (!this.value.trim()) return;
+
+  const { cleaned, replaced } = cleanText(this.value);
+
+  // Show cleaned preview if characters were replaced with spaces
+  if (replaced.length > 0) {
+    document.getElementById('encrypt-cleaned-text').textContent = cleaned;
+    const charList = replaced.map(c => `"${c}"`).join(', ');
+    document.getElementById('encrypt-stripped-chars').textContent =
+      `Replaced with spaces: ${charList}`;
+    cleanedEl.style.display = 'block';
+  }
+
+  if (!cleaned) return;
+
+  const digitsNeeded = cleaned.length * 2;
+
+  if (padId) {
+    const pad = pads.find(p => p.id === padId);
+    if (pad) {
+      const available = pad.digits.length - pad.usedCount;
+      infoEl.innerHTML = `Message needs ${digitsNeeded} pad digits (${cleaned.length} chars). Pad has ${available} remaining.`;
+      infoEl.style.display = 'block';
+
+      if (digitsNeeded > available) {
+        warnEl.innerHTML = `Warning: message is too long for this pad. Need ${digitsNeeded - available} more digits.`;
+        warnEl.style.display = 'block';
+      }
+    }
+  }
+});
+
+// ==================== DECRYPT INPUT PARSING ====================
+// Detect pad reference on last line (e.g. "F1AC20C9-204") and auto-select pad + offset
+document.getElementById('decrypt-input').addEventListener('input', parseDecryptReference);
+document.getElementById('decrypt-input').addEventListener('paste', function() {
+  // Delay to let paste content populate the textarea first
+  setTimeout(parseDecryptReference, 0);
+});
+
+function parseDecryptReference() {
+  const textarea = document.getElementById('decrypt-input');
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  if (lines.length < 1) return;
+
+  const lastLine = lines[lines.length - 1];
+
+  // Match pattern: 8+ hex chars, dash, digits (e.g. F1AC20C9-204 or CC1D2E16-0)
+  const match = lastLine.match(/^([A-Fa-f0-9]{8,})-(\d+)$/);
+  if (!match) return;
+
+  const padId = match[1].toUpperCase();
+  const offset = parseInt(match[2]);
+
+  // Set offset
+  document.getElementById('decrypt-offset').value = offset;
+
+  // Try to select the pad
+  const pad = pads.find(p => p.id === padId);
+  if (pad) {
+    selectPadForPanel('decrypt-pad-list', padId);
+  }
+
+  // Remove the reference line from the textarea
+  lines.pop();
+  textarea.value = lines.join('\n');
+}
+
+// ==================== TABS ====================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => switchToTab(tab.dataset.panel));
+});
+
+function switchToTab(panelId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.panel === panelId));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + panelId));
+  if (panelId === 'pads' || panelId === 'encrypt' || panelId === 'decrypt' || panelId === 'stego') refreshAllPadLists();
+}
+
+// ==================== UTILITIES ====================
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function copyText(elementId) {
+  const el = document.getElementById(elementId);
+  const text = el.innerText || el.textContent;
+  navigator.clipboard.writeText(text.replace('Copy', '').trim()).then(() => {
+    const btn = el.querySelector('.copy-btn');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); }
+  });
+}
+
+// ==================== STEGANOGRAPHY ====================
+let stegoOutputDataUrl = null;
+
+// --- Capacity check when image is loaded ---
+document.getElementById('stego-embed-image').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+
+  const img = new Image();
+  img.onload = function() {
+    const pixels = img.width * img.height;
+    const channels = 3;
+    const bitsPerChannel = 2;
+    const capacityBits = pixels * channels * bitsPerChannel;
+    const capacityBytes = Math.floor(capacityBits / 8);
+    const infoEl = document.getElementById('stego-capacity-info');
+    infoEl.textContent = `Image: ${img.width}x${img.height} (${pixels.toLocaleString()} pixels) — Capacity: ~${(capacityBytes / 1024).toFixed(1)} KB (~${Math.floor(capacityBytes / 1).toLocaleString()} pad digits)`;
+    infoEl.style.display = 'block';
+    document.getElementById('stego-original-preview').src = img.src;
+  };
+  img.src = URL.createObjectURL(file);
+});
+
+// --- Pad selector for stego (multi-select) ---
+function renderStegoPadSelector() {
+  const container = document.getElementById('stego-pad-list');
+  if (pads.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:8px;">No pads available. Generate one first.</div>';
+    return;
+  }
+
+  container.innerHTML = pads.map(p => {
+    const label = p.label ? ` — ${escapeHtml(p.label)}` : '';
+    const checked = (container.dataset.selected || '').split(',').includes(p.id);
+    return `<div class="pad-list-item ${checked ? 'selected' : ''}" onclick="toggleStegoPad('${p.id}')">
+      <div class="pad-info">
+        <span class="pad-id">${checked ? '&#9745;' : '&#9744;'} ${p.id}${label}</span>
+        <span class="pad-meta">${p.digits.length} digits &middot; ${getStatus(p)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleStegoPad(padId) {
+  const container = document.getElementById('stego-pad-list');
+  let selected = (container.dataset.selected || '').split(',').filter(s => s);
+  if (selected.includes(padId)) {
+    selected = selected.filter(s => s !== padId);
+  } else {
+    selected.push(padId);
+  }
+  container.dataset.selected = selected.join(',');
+  renderStegoPadSelector();
+}
+
+function getSelectedStegoPads() {
+  const container = document.getElementById('stego-pad-list');
+  return (container.dataset.selected || '').split(',').filter(s => s);
+}
+
+// --- LSB encoding: write bits into image pixel data ---
+function embedBitsInPixels(imageData, bits) {
+  const data = imageData.data;
+  let bitIndex = 0;
+
+  for (let i = 0; i < data.length && bitIndex < bits.length; i++) {
+    if ((i + 1) % 4 === 0) continue; // skip alpha
+    const bit0 = bits[bitIndex] || 0;
+    const bit1 = bits[bitIndex + 1] || 0;
+    data[i] = (data[i] & 0xFC) | (bit1 << 1) | bit0;
+    bitIndex += 2;
+  }
+
+  return imageData;
+}
+
+// --- LSB decoding: read bits from image pixel data ---
+function extractBitsFromPixels(imageData, bitCount) {
+  const data = imageData.data;
+  const bits = [];
+  let bitIndex = 0;
+
+  for (let i = 0; i < data.length && bitIndex < bitCount; i++) {
+    if ((i + 1) % 4 === 0) continue;
+    const bit0 = data[i] & 1;
+    const bit1 = (data[i] >> 1) & 1;
+    bits.push(bit0);
+    bits.push(bit1);
+    bitIndex += 2;
+  }
+
+  return bits.slice(0, bitCount);
+}
+
+// --- Convert Uint8Array to bit array ---
+function bytesToBits(bytes) {
+  const bits = [];
+  for (const byte of bytes) {
+    for (let i = 0; i < 8; i++) {
+      bits.push((byte >> i) & 1);
+    }
+  }
+  return bits;
+}
+
+// --- Convert bit array back to Uint8Array ---
+function bitsToBytes(bits) {
+  const bytes = new Uint8Array(Math.ceil(bits.length / 8));
+  for (let i = 0; i < bits.length; i++) {
+    if (bits[i]) {
+      bytes[Math.floor(i / 8)] |= (1 << (i % 8));
+    }
+  }
+  return bytes;
+}
+
+// --- Main embed function ---
+async function stegoEmbed() {
+  const fileInput = document.getElementById('stego-embed-image');
+  const pass = document.getElementById('stego-embed-pass').value;
+  const passConfirm = document.getElementById('stego-embed-pass-confirm').value;
+  const warnEl = document.getElementById('stego-embed-warning');
+  warnEl.style.display = 'none';
+
+  if (!fileInput.files.length) { alert('Select a cover image.'); return; }
+  if (!pass) { alert('Enter a passphrase.'); return; }
+  if (pass !== passConfirm) { alert('Passphrases do not match.'); return; }
+  if (pass.length < 8) { alert('Passphrase must be at least 8 characters.'); return; }
+
+  const selectedIds = getSelectedStegoPads();
+  if (selectedIds.length === 0) { alert('Select at least one pad to embed.'); return; }
+
+  const selectedPads = selectedIds.map(id => pads.find(p => p.id === id)).filter(Boolean);
+
+  try {
+    const padData = JSON.stringify(selectedPads.map(p => ({
+      id: p.id, label: p.label, digits: Array.from(p.digits),
+      usedCount: p.usedCount, created: p.created
+    })));
+
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(pass, salt);
+    const enc = new TextEncoder();
+    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, enc.encode(padData));
+
+    // Payload: [MAGIC 4B][salt 16B][iv 12B][length 4B][ciphertext]
+    const MAGIC = new Uint8Array([0x4F, 0x54, 0x50, 0x53]); // "OTPS"
+    const cipherBytes = new Uint8Array(encrypted);
+    const lengthBytes = new Uint8Array(4);
+    new DataView(lengthBytes.buffer).setUint32(0, cipherBytes.length, false);
+
+    const payload = new Uint8Array(4 + 16 + 12 + 4 + cipherBytes.length);
+    payload.set(MAGIC, 0);
+    payload.set(salt, 4);
+    payload.set(iv, 20);
+    payload.set(lengthBytes, 32);
+    payload.set(cipherBytes, 36);
+
+    // Load cover image into canvas
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = URL.createObjectURL(fileInput.files[0]);
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Check capacity
+    const pixels = canvas.width * canvas.height;
+    const usableChannels = pixels * 3;
+    const capacityBits = usableChannels * 2;
+    const payloadBits = payload.length * 8;
+
+    if (payloadBits > capacityBits) {
+      warnEl.innerHTML = `Image too small. Need ${(payload.length / 1024).toFixed(1)} KB capacity but image only holds ${(capacityBits / 8 / 1024).toFixed(1)} KB. Use a larger image.`;
+      warnEl.style.display = 'block';
+      return;
+    }
+
+    // Embed bits
+    const bits = bytesToBits(payload);
+    embedBitsInPixels(imageData, bits);
+
+    // Write back to canvas and export
+    ctx.putImageData(imageData, 0, 0);
+    stegoOutputDataUrl = canvas.toDataURL('image/png');
+
+    document.getElementById('stego-output-preview').src = stegoOutputDataUrl;
+    document.getElementById('stego-embed-success').textContent =
+      `Successfully embedded ${selectedPads.length} pad(s) (${payload.length.toLocaleString()} bytes) into image. The image looks identical — data is hidden in the least significant bits.`;
+    document.getElementById('stego-embed-result').style.display = 'block';
+
+  } catch (e) {
+    alert('Steganography embed failed: ' + e.message);
+  }
+}
+
+function stegoDownload() {
+  if (!stegoOutputDataUrl) return;
+  // Random filename, keep .png so it opens normally as an image
+  const rnd = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2,'0')).join('');
+  const a = document.createElement('a');
+  a.href = stegoOutputDataUrl;
+  a.download = rnd + '.png';
+  a.click();
+}
+
+// --- Main extract function ---
+async function stegoExtract() {
+  const fileInput = document.getElementById('stego-extract-image');
+  const pass = document.getElementById('stego-extract-pass').value;
+  const statusEl = document.getElementById('stego-extract-status');
+
+  if (!fileInput.files.length) { alert('Select a stego image.'); return; }
+  if (!pass) { alert('Enter the passphrase.'); return; }
+
+  try {
+    statusEl.innerHTML = '<span style="color:var(--yellow);">Extracting...</span>';
+
+    // Force-load as PNG regardless of file extension
+    const fileBlob = new Blob([await fileInput.files[0].arrayBuffer()], { type: 'image/png' });
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = () => reject(new Error('Could not load file as image. Is it a valid PNG?'));
+      img.src = URL.createObjectURL(fileBlob);
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Extract header: MAGIC (4B) + salt (16B) + iv (12B) + length (4B) = 36 bytes = 288 bits
+    const headerBits = extractBitsFromPixels(imageData, 36 * 8);
+    const headerBytes = bitsToBytes(headerBits);
+
+    // Verify magic
+    if (headerBytes[0] !== 0x4F || headerBytes[1] !== 0x54 || headerBytes[2] !== 0x50 || headerBytes[3] !== 0x53) {
+      statusEl.innerHTML = '<span style="color:var(--red);">No hidden pad data found in this image. It may not be a stego image, or it may have been compressed (e.g. by social media).</span>';
+      return;
+    }
+
+    // Parse header
+    const salt = headerBytes.slice(4, 20);
+    const iv = headerBytes.slice(20, 32);
+    const cipherLength = new DataView(headerBytes.buffer).getUint32(32, false);
+
+    // Extract full payload
+    const totalBytes = 36 + cipherLength;
+    const allBits = extractBitsFromPixels(imageData, totalBytes * 8);
+    const allBytes = bitsToBytes(allBits);
+    const ciphertext = allBytes.slice(36, 36 + cipherLength);
+
+    // Decrypt
+    const key = await deriveKey(pass, salt);
+    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, ciphertext);
+
+    const dec = new TextDecoder();
+    const imported = JSON.parse(dec.decode(decrypted));
+
+    // Load into pad library
+    let added = 0;
+    for (const p of imported) {
+      if (pads.find(existing => existing.id === p.id)) continue;
+      pads.push({
+        id: p.id, label: p.label, digits: p.digits,
+        usedCount: p.usedCount, created: p.created
+      });
+      added++;
+    }
+
+    refreshAllPadLists();
+    statusEl.innerHTML = `<span style="color:var(--green);">Extracted and loaded ${added} pad(s) into your library. ${imported.length - added} duplicate(s) skipped.</span>`;
+
+  } catch (e) {
+    if (e.name === 'OperationError') {
+      statusEl.innerHTML = '<span style="color:var(--red);">Decryption failed: wrong passphrase or corrupted data.</span>';
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--red);">Extraction failed: ${escapeHtml(e.message)}</span>`;
+    }
+  }
+}
+
+// --- Stego passphrase strength meter ---
+document.getElementById('stego-embed-pass').addEventListener('input', function() {
+  const pass = this.value;
+  let score = 0;
+  if (pass.length >= 8) score++;
+  if (pass.length >= 12) score++;
+  if (pass.length >= 16) score++;
+  if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score++;
+  if (/\d/.test(pass)) score++;
+  if (/[^a-zA-Z\d]/.test(pass)) score++;
+
+  const pct = Math.min(score / 6 * 100, 100);
+  const fill = document.getElementById('stego-embed-strength');
+  const label = document.getElementById('stego-embed-strength-label');
+
+  fill.style.width = pct + '%';
+  if (score <= 2) { fill.style.background = 'var(--red)'; label.textContent = 'Weak'; label.style.color = 'var(--red)'; }
+  else if (score <= 4) { fill.style.background = 'var(--yellow)'; label.textContent = 'Moderate'; label.style.color = 'var(--yellow)'; }
+  else { fill.style.background = 'var(--green)'; label.textContent = 'Strong'; label.style.color = 'var(--green)'; }
+});
+
+// ==================== MESSAGE STEGANOGRAPHY ====================
+let msgStegoOutputDataUrl = null;
+let lastCiphertext = null;
+let lastCipherMeta = null;
+
+// Capacity check on image select
+document.getElementById('msg-stego-image').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = function() {
+    const pixels = img.width * img.height;
+    const capacityBytes = Math.floor(pixels * 3 * 2 / 8);
+    const infoEl = document.getElementById('msg-stego-capacity');
+    infoEl.textContent = `Image: ${img.width}x${img.height} — Capacity: ~${(capacityBytes / 1024).toFixed(1)} KB`;
+    infoEl.style.display = 'block';
+    document.getElementById('msg-stego-original').src = img.src;
+  };
+  img.src = URL.createObjectURL(file);
+});
+
+// Embed ciphertext into image (no passphrase — OTP is already the encryption)
+async function msgStegoEmbed() {
+  const fileInput = document.getElementById('msg-stego-image');
+  const warnEl = document.getElementById('msg-stego-warning');
+  warnEl.style.display = 'none';
+
+  if (!fileInput.files.length) { alert('Select a cover image.'); return; }
+  if (!lastCiphertext) { alert('No ciphertext to embed. Encrypt a message first.'); return; }
+
+  try {
+    // Payload: ciphertext digits + pad reference
+    const payload_str = lastCipherMeta + '\n' + lastCiphertext;
+    const enc = new TextEncoder();
+    const payloadBytes = enc.encode(payload_str);
+
+    // Build: [MAGIC 4B "OTPC"][length 4B][payload]
+    const MAGIC = new Uint8Array([0x4F, 0x54, 0x50, 0x43]); // "OTPC"
+    const lengthBytes = new Uint8Array(4);
+    new DataView(lengthBytes.buffer).setUint32(0, payloadBytes.length, false);
+
+    const fullPayload = new Uint8Array(4 + 4 + payloadBytes.length);
+    fullPayload.set(MAGIC, 0);
+    fullPayload.set(lengthBytes, 4);
+    fullPayload.set(payloadBytes, 8);
+
+    // Load image
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = URL.createObjectURL(fileInput.files[0]);
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Check capacity
+    const capacityBits = canvas.width * canvas.height * 3 * 2;
+    const payloadBits = fullPayload.length * 8;
+
+    if (payloadBits > capacityBits) {
+      warnEl.innerHTML = `Image too small. Need ${(fullPayload.length / 1024).toFixed(1)} KB but image holds ${(capacityBits / 8 / 1024).toFixed(1)} KB.`;
+      warnEl.style.display = 'block';
+      return;
+    }
+
+    // Embed
+    const bits = bytesToBits(fullPayload);
+    embedBitsInPixels(imageData, bits);
+
+    ctx.putImageData(imageData, 0, 0);
+    msgStegoOutputDataUrl = canvas.toDataURL('image/png');
+
+    document.getElementById('msg-stego-output').src = msgStegoOutputDataUrl;
+    document.getElementById('msg-stego-success').textContent =
+      `Ciphertext hidden in image (${fullPayload.length} bytes). The recipient extracts it on the Decrypt tab.`;
+    document.getElementById('msg-stego-result').style.display = 'block';
+
+  } catch (e) {
+    alert('Embed failed: ' + e.message);
+  }
+}
+
+function msgStegoDownload() {
+  if (!msgStegoOutputDataUrl) return;
+  const rnd = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2,'0')).join('');
+  const a = document.createElement('a');
+  a.href = msgStegoOutputDataUrl;
+  a.download = rnd + '.png';
+  a.click();
+}
+
+// Extract ciphertext from image
+async function msgStegoExtract() {
+  const fileInput = document.getElementById('msg-stego-extract-image');
+  const statusEl = document.getElementById('msg-stego-extract-status');
+
+  if (!fileInput.files.length) { alert('Select an image.'); return; }
+
+  try {
+    statusEl.innerHTML = '<span style="color:var(--yellow);">Extracting...</span>';
+
+    // Force-load as PNG regardless of extension
+    const fileBlob = new Blob([await fileInput.files[0].arrayBuffer()], { type: 'image/png' });
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = () => reject(new Error('Could not load file as image.'));
+      img.src = URL.createObjectURL(fileBlob);
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Extract header: MAGIC (4B) + length (4B) = 8 bytes = 64 bits
+    const headerBits = extractBitsFromPixels(imageData, 8 * 8);
+    const headerBytes = bitsToBytes(headerBits);
+
+    // Verify OTPC magic
+    if (headerBytes[0] !== 0x4F || headerBytes[1] !== 0x54 || headerBytes[2] !== 0x50 || headerBytes[3] !== 0x43) {
+      statusEl.innerHTML = '<span style="color:var(--red);">No hidden ciphertext found in this image.</span>';
+      return;
+    }
+
+    // Parse length
+    const payloadLength = new DataView(headerBytes.buffer).getUint32(4, false);
+
+    // Extract full payload
+    const totalBytes = 8 + payloadLength;
+    const allBits = extractBitsFromPixels(imageData, totalBytes * 8);
+    const allBytes = bitsToBytes(allBits);
+    const payloadBytes = allBytes.slice(8, 8 + payloadLength);
+
+    const dec = new TextDecoder();
+    const payload_str = dec.decode(payloadBytes);
+    const newline = payload_str.indexOf('\n');
+    const meta = newline >= 0 ? payload_str.substring(0, newline) : '';
+    const cipherDigits = newline >= 0 ? payload_str.substring(newline + 1) : payload_str;
+
+    // Fill in the decrypt form
+    document.getElementById('decrypt-input').value = cipherDigits;
+
+    // Parse pad reference (format: PADID-OFFSET)
+    if (meta && meta.includes('-')) {
+      const parts = meta.split('-');
+      const offset = parseInt(parts[parts.length - 1]);
+      if (!isNaN(offset)) {
+        document.getElementById('decrypt-offset').value = offset;
+      }
+    }
+
+    statusEl.innerHTML = `<span style="color:var(--green);">Extracted ${cipherDigits.length} digits. ${meta ? 'Ref: ' + escapeHtml(meta) : ''} — Select the matching pad and click Decrypt.</span>`;
+
+  } catch (e) {
+    statusEl.innerHTML = `<span style="color:var(--red);">Extraction failed: ${escapeHtml(e.message)}</span>`;
+  }
+}
+</script>
+
+</body>
+</html>
