@@ -1,5 +1,7 @@
 # One-Time Pad Suite
 
+**Disclamer**: According to some people on Reddit this is a piece of shit. Don't touch it, dont learn from it, don't have fun.
+
 A fully offline, browser-based one-time pad (OTP) encryption tool. Generate cryptographically secure pads, encrypt and decrypt messages, hide pads or ciphertext inside images using steganography, and export/import pad libraries — all without any server, account, or internet connection.
 
 Open `otp-suite.html` in any modern browser to get started. Everything runs client-side in JavaScript; nothing is ever transmitted.
